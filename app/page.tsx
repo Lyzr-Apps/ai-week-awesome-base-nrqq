@@ -173,6 +173,75 @@ const SAMPLE_DIGEST: DigestResponse = {
 }
 
 // ---------------------------------------------------------------------------
+// Response Extraction Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Robustly extract digest data from a potentially nested API response.
+ * The Lyzr API + parseLLMJson + normalizeResponse chain can place data
+ * at various nesting levels. This function searches for the actual
+ * DigestResponse shape (has research_digest or linkedin_post) no matter
+ * how deeply it's wrapped.
+ */
+function extractDigestData(raw: any): DigestResponse | null {
+  if (!raw || typeof raw !== 'object') return null
+
+  // Direct match — raw IS the digest
+  if (raw.research_digest || raw.linkedin_post) {
+    return raw as DigestResponse
+  }
+
+  // Check common wrapper keys
+  const wrapperKeys = ['result', 'response', 'data', 'output', 'content', 'message']
+  for (const key of wrapperKeys) {
+    if (raw[key] && typeof raw[key] === 'object') {
+      const found = extractDigestData(raw[key])
+      if (found) return found
+    }
+    // Handle stringified JSON inside a key
+    if (raw[key] && typeof raw[key] === 'string') {
+      try {
+        const parsed = JSON.parse(raw[key])
+        const found = extractDigestData(parsed)
+        if (found) return found
+      } catch { /* not JSON, skip */ }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Extract image artifact files from a potentially nested response
+ */
+function extractImageFiles(result: any): { file_url: string; name: string; format_type: string }[] {
+  if (!result) return []
+  // Top-level module_outputs (expected path)
+  const topLevel = result?.module_outputs?.artifact_files
+  if (Array.isArray(topLevel) && topLevel.length > 0) return topLevel
+  // Inside response
+  const nested = result?.response?.module_outputs?.artifact_files
+  if (Array.isArray(nested) && nested.length > 0) return nested
+  return []
+}
+
+/**
+ * Extract Slack delivery data from response
+ */
+function extractSlackData(raw: any): SlackResponse | null {
+  if (!raw || typeof raw !== 'object') return null
+  if (raw.delivery_status) return raw as SlackResponse
+  const wrapperKeys = ['result', 'response', 'data']
+  for (const key of wrapperKeys) {
+    if (raw[key] && typeof raw[key] === 'object') {
+      const found = extractSlackData(raw[key])
+      if (found) return found
+    }
+  }
+  return null
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -732,6 +801,7 @@ export default function Page() {
 
   // Sample data toggle
   const [showSampleData, setShowSampleData] = useState(false)
+  const [isSampleData, setIsSampleData] = useState(false)
 
   // History
   const [history, setHistory] = useState<HistoryEntry[]>([])
@@ -805,12 +875,15 @@ export default function Page() {
       setDigest(SAMPLE_DIGEST)
       setLinkedinPost(SAMPLE_DIGEST.linkedin_post)
       setExpandedCategories({ yc_startups: true, new_models: true })
-    } else if (!showSampleData && digest === SAMPLE_DIGEST) {
+      setIsSampleData(true)
+    } else if (!showSampleData && isSampleData) {
       setDigest(null)
       setLinkedinPost('')
       setExpandedCategories({})
+      setIsSampleData(false)
+      setDigestStatus('')
     }
-  }, [showSampleData, digest])
+  }, [showSampleData, digest, isSampleData])
 
   // Save slack default
   const handleSlackDefaultChange = (val: string) => {
@@ -823,11 +896,19 @@ export default function Page() {
     setDigestLoading(true)
     setDigestStatus('Generating weekly AI digest... This may take a minute.')
     setActiveAgentId(AGENT_IDS.COORDINATOR)
+    setIsSampleData(false)
     try {
-      const result = await callAIAgent('Generate this week\'s AI intelligence digest covering YC startups, new models, open source developments, benchmarks, layoffs/hiring trends, and funding rounds. Include Twitter/X trends and write a LinkedIn post.', AGENT_IDS.COORDINATOR)
+      const result = await callAIAgent(
+        'Generate this week\'s AI intelligence digest covering YC startups, new models, open source developments, benchmarks, layoffs/hiring trends, and funding rounds. Include Twitter/X trends and write a LinkedIn post.',
+        AGENT_IDS.COORDINATOR
+      )
+
       if (result.success) {
-        const data = result?.response?.result as DigestResponse | undefined
-        if (data) {
+        // Use robust extraction to find the digest data at any nesting level
+        const directResult = result?.response?.result
+        const data = extractDigestData(directResult) || extractDigestData(result?.response) || extractDigestData(result)
+
+        if (data && (data.research_digest || data.linkedin_post)) {
           setDigest(data)
           setLinkedinPost(data?.linkedin_post ?? '')
           setDigestStatus('Digest generated successfully!')
@@ -848,13 +929,26 @@ export default function Page() {
           setHistory(newHistory)
           try { localStorage.setItem('twiai_history', JSON.stringify(newHistory)) } catch { /* ignore */ }
         } else {
-          setDigestStatus('Digest generated but response format was unexpected.')
+          // Try to show what we got so the user can see the raw output
+          const rawMessage = result?.response?.message || result?.raw_response || ''
+          if (typeof rawMessage === 'string' && rawMessage.length > 0) {
+            setDigestStatus('Digest received but could not parse structured data. Showing raw output.')
+            // Create a minimal digest with the raw text as linkedin_post for visibility
+            setLinkedinPost(rawMessage.slice(0, 3000))
+          } else {
+            setDigestStatus('Digest generated but response format was unexpected. Please try again.')
+          }
         }
       } else {
-        setDigestStatus(`Error: ${result?.error ?? 'Failed to generate digest'}`)
+        setDigestStatus(`Error: ${result?.error ?? result?.response?.message ?? 'Failed to generate digest. Please try again.'}`)
       }
     } catch (err) {
-      setDigestStatus(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error'
+      if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('network')) {
+        setDigestStatus('Network error: The request may have timed out. Manager agents can take 1-2 minutes. Please try again.')
+      } else {
+        setDigestStatus(`Error: ${errorMsg}`)
+      }
     }
     setDigestLoading(false)
     setActiveAgentId(null)
@@ -867,12 +961,21 @@ export default function Page() {
     setActiveAgentId(AGENT_IDS.IMAGE_GENERATOR)
     try {
       const summary = digest?.week_summary ?? 'This Week in AI digest'
-      const result = await callAIAgent(`Generate a professional "This Week in AI" branded image for the digest: ${summary}`, AGENT_IDS.IMAGE_GENERATOR)
-      if (result.success) {
-        const data = result?.response?.result as ImageResponse | undefined
-        if (data) setImageData(data)
+      const highlights = digest?.research_digest
+        ? Object.values(digest.research_digest)
+            .flatMap((cat: any) => Array.isArray(cat?.stories) ? cat.stories.map((s: any) => s?.headline).filter(Boolean) : [])
+            .slice(0, 3)
+            .join('; ')
+        : ''
+      const prompt = `Generate a professional "This Week in AI" branded image with Lyzr brown color palette. Key highlights: ${summary}. ${highlights ? `Top headlines: ${highlights}` : ''}`
+      const result = await callAIAgent(prompt, AGENT_IDS.IMAGE_GENERATOR)
 
-        const files = Array.isArray(result?.module_outputs?.artifact_files) ? result.module_outputs.artifact_files : []
+      if (result.success) {
+        const data = result?.response?.result
+        if (data && typeof data === 'object') setImageData(data as ImageResponse)
+
+        // Use robust extraction for image files
+        const files = extractImageFiles(result)
         if (files.length > 0 && files[0]?.file_url) {
           setImageUrl(files[0].file_url)
           setImageStatus('Image generated successfully!')
@@ -905,9 +1008,20 @@ export default function Page() {
     setActiveAgentId(AGENT_IDS.SLACK_DELIVERY)
     try {
       const content = linkedinPost || digest?.linkedin_post || ''
-      const result = await callAIAgent(`Send the following AI weekly digest to Slack channel ${slackChannel}:\n\n${content}`, AGENT_IDS.SLACK_DELIVERY)
+      const weekSummary = digest?.week_summary || ''
+      const message = `Send the following AI weekly digest to Slack channel "${slackChannel}".
+
+Content to post:
+---
+${weekSummary ? `Summary: ${weekSummary}\n\n` : ''}LinkedIn Post:
+${content}
+---
+
+Post this content to the channel "${slackChannel}" using SLACK_CHAT_POST_MESSAGE.`
+
+      const result = await callAIAgent(message, AGENT_IDS.SLACK_DELIVERY)
       if (result.success) {
-        const data = result?.response?.result as SlackResponse | undefined
+        const data = extractSlackData(result?.response?.result) || extractSlackData(result?.response) || extractSlackData(result)
         const statusText = data?.delivery_status ?? 'sent'
         const channel = data?.channel_name ?? slackChannel
         const ts = data?.timestamp ?? ''
@@ -1087,7 +1201,7 @@ export default function Page() {
                   />
                 )}
 
-                {/* Action Bar */}
+                {/* Action Bar — Generate CTA */}
                 {!displayDigest && !digestLoading && (
                   <Card className="bg-card border-border shadow-lg">
                     <CardContent className="p-8 text-center">
@@ -1099,6 +1213,27 @@ export default function Page() {
                       <Button onClick={handleGenerateDigest} disabled={digestLoading} className="bg-accent text-accent-foreground hover:bg-accent/90 px-8 py-2.5">
                         <HiArrowPath className={`w-4 h-4 mr-2 ${digestLoading ? 'animate-spin' : ''}`} />
                         Generate Digest
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Show raw linkedin post if we got text but couldn't parse structured data */}
+                {!displayDigest && !digestLoading && linkedinPost && (
+                  <Card className="bg-card border-border shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="text-base font-semibold">Agent Response (Raw)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Textarea
+                        value={linkedinPost}
+                        onChange={(e) => setLinkedinPost(e.target.value)}
+                        rows={10}
+                        className="bg-secondary/30 border-border text-foreground text-sm resize-y"
+                      />
+                      <Button variant="outline" size="sm" onClick={handleCopy} className="mt-3 border-accent/30 hover:bg-accent/10">
+                        <HiClipboard className="w-4 h-4 mr-1.5" />
+                        {copyStatus || 'Copy'}
                       </Button>
                     </CardContent>
                   </Card>
