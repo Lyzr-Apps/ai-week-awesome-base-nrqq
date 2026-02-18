@@ -1,0 +1,13 @@
+{
+  "agent_id": "6995671baeb52a0abba6ec6d",
+  "agent_name": "Slack Delivery Agent",
+  "agent_type": "json",
+  "accessor": "json",
+  "has_module_outputs": false,
+  "response_schema": {
+    "delivery_status": "string",
+    "channel_name": "string",
+    "message_preview": "string",
+    "timestamp": "string"
+  }
+}

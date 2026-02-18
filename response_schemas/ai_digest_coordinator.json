@@ -1,0 +1,110 @@
+{
+  "agent_id": "6995671a8828565b3dd1fd5f",
+  "agent_name": "AI Digest Coordinator",
+  "agent_type": "json",
+  "accessor": "json",
+  "has_module_outputs": false,
+  "response_schema": {
+    "research_digest": {
+      "type": "object",
+      "properties": {
+        "yc_startups": {
+          "stories": {
+            "type": "array",
+            "items": {
+              "headline": "string",
+              "summary": "string",
+              "source": "string",
+              "why_it_matters": "string"
+            }
+          },
+          "pattern": "string"
+        },
+        "new_models": {
+          "stories": {
+            "type": "array",
+            "items": {
+              "headline": "string",
+              "summary": "string",
+              "source": "string",
+              "why_it_matters": "string"
+            }
+          },
+          "pattern": "string"
+        },
+        "open_source": {
+          "stories": {
+            "type": "array",
+            "items": {
+              "headline": "string",
+              "summary": "string",
+              "source": "string",
+              "why_it_matters": "string"
+            }
+          },
+          "pattern": "string"
+        },
+        "benchmarks": {
+          "stories": {
+            "type": "array",
+            "items": {
+              "headline": "string",
+              "summary": "string",
+              "source": "string",
+              "why_it_matters": "string"
+            }
+          },
+          "pattern": "string"
+        },
+        "layoffs_hiring": {
+          "stories": {
+            "type": "array",
+            "items": {
+              "headline": "string",
+              "summary": "string",
+              "source": "string",
+              "why_it_matters": "string"
+            }
+          },
+          "pattern": "string"
+        },
+        "funding": {
+          "stories": {
+            "type": "array",
+            "items": {
+              "headline": "string",
+              "summary": "string",
+              "source": "string",
+              "why_it_matters": "string"
+            }
+          },
+          "pattern": "string"
+        }
+      }
+    },
+    "twitter_trends": {
+      "type": "array",
+      "items": {
+        "topic": "string",
+        "summary": "string",
+        "notable_voices": "string"
+      }
+    },
+    "linkedin_post": "string",
+    "character_count": "number",
+    "suggested_tags": {
+      "type": "array",
+      "items": {
+        "name": "string",
+        "title": "string",
+        "reason": "string"
+      }
+    },
+    "hashtags": {
+      "type": "array",
+      "items": "string"
+    },
+    "editors_note": "string",
+    "week_summary": "string"
+  }
+}

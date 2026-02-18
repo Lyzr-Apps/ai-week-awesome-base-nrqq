@@ -1,0 +1,108 @@
+{
+  "agent_id": "699566df52ed9064d46e1e06",
+  "agent_name": "AI Trend Research Agent",
+  "agent_type": "json",
+  "accessor": "json",
+  "has_module_outputs": false,
+  "response_schema": {
+    "yc_startups": {
+      "type": "object",
+      "properties": {
+        "stories": {
+          "type": "array",
+          "items": {
+            "headline": "string",
+            "summary": "string",
+            "source": "string",
+            "why_it_matters": "string"
+          }
+        },
+        "pattern": "string"
+      }
+    },
+    "new_models": {
+      "type": "object",
+      "properties": {
+        "stories": {
+          "type": "array",
+          "items": {
+            "headline": "string",
+            "summary": "string",
+            "source": "string",
+            "why_it_matters": "string"
+          }
+        },
+        "pattern": "string"
+      }
+    },
+    "open_source": {
+      "type": "object",
+      "properties": {
+        "stories": {
+          "type": "array",
+          "items": {
+            "headline": "string",
+            "summary": "string",
+            "source": "string",
+            "why_it_matters": "string"
+          }
+        },
+        "pattern": "string"
+      }
+    },
+    "benchmarks": {
+      "type": "object",
+      "properties": {
+        "stories": {
+          "type": "array",
+          "items": {
+            "headline": "string",
+            "summary": "string",
+            "source": "string",
+            "why_it_matters": "string"
+          }
+        },
+        "pattern": "string"
+      }
+    },
+    "layoffs_hiring": {
+      "type": "object",
+      "properties": {
+        "stories": {
+          "type": "array",
+          "items": {
+            "headline": "string",
+            "summary": "string",
+            "source": "string",
+            "why_it_matters": "string"
+          }
+        },
+        "pattern": "string"
+      }
+    },
+    "funding": {
+      "type": "object",
+      "properties": {
+        "stories": {
+          "type": "array",
+          "items": {
+            "headline": "string",
+            "summary": "string",
+            "source": "string",
+            "why_it_matters": "string"
+          }
+        },
+        "pattern": "string"
+      }
+    },
+    "twitter_trends": {
+      "type": "array",
+      "items": {
+        "topic": "string",
+        "summary": "string",
+        "notable_voices": "string"
+      }
+    },
+    "week_summary": "string"
+  }
+}

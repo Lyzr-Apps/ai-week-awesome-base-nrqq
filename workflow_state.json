@@ -1,0 +1,66 @@
+{
+  "agents": {
+    "ai_trend_research_agent": {
+      "agent_id": "699566df52ed9064d46e1e06",
+      "name": "AI Trend Research Agent",
+      "type": "sub-agent",
+      "provider": "Perplexity",
+      "model": "perplexity/sonar-pro"
+    },
+    "linkedin_content_writer_agent": {
+      "agent_id": "699566df5cfd76433be5d3fa",
+      "name": "LinkedIn Content Writer Agent",
+      "type": "sub-agent",
+      "provider": "Anthropic",
+      "model": "claude-sonnet-4-5"
+    },
+    "ai_digest_coordinator": {
+      "agent_id": "6995671a8828565b3dd1fd5f",
+      "name": "AI Digest Coordinator",
+      "type": "manager",
+      "provider": "OpenAI",
+      "model": "gpt-4.1",
+      "managed_agents": [
+        "699566df52ed9064d46e1e06",
+        "699566df5cfd76433be5d3fa"
+      ]
+    },
+    "branded_image_generator_agent": {
+      "agent_id": "6995671b52ed9064d46e1e08",
+      "name": "Branded Image Generator Agent",
+      "type": "independent",
+      "provider": "Google",
+      "model": "gemini-2.5-pro",
+      "image_output_config": {
+        "model": "gemini/gemini-3-pro-image-preview",
+        "credential_id": "lyzr_google"
+      }
+    },
+    "slack_delivery_agent": {
+      "agent_id": "6995671baeb52a0abba6ec6d",
+      "name": "Slack Delivery Agent",
+      "type": "independent",
+      "provider": "OpenAI",
+      "model": "gpt-4.1",
+      "tool_configs": [
+        {
+          "tool_name": "composio",
+          "action_names": ["SLACK_CHAT_POST_MESSAGE", "SLACK_LIST_ALL_CHANNELS"]
+        }
+      ]
+    }
+  },
+  "schedules": {
+    "weekly_digest_schedule": {
+      "schedule_id": "69956727399dfadeac379a96",
+      "agent_id": "6995671a8828565b3dd1fd5f",
+      "cron_expression": "0 10 * * 1",
+      "timezone": "Asia/Kolkata",
+      "message": "Run the weekly AI digest pipeline. Research all six categories of AI news from the past 7 days, generate the LinkedIn post, and compile the full digest.",
+      "is_active": true,
+      "next_run_time": "2026-02-23T10:00:00+05:30"
+    }
+  },
+  "primary_agent_id": "6995671a8828565b3dd1fd5f",
+  "primary_agent_name": "AI Digest Coordinator"
+}

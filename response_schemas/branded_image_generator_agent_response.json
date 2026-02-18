@@ -1,0 +1,26 @@
+{
+  "agent_name": "Branded Image Generator Agent",
+  "agent_id": "6995671b52ed9064d46e1e08",
+  "description": "Generates a professional \"This Week in AI\" branded image using Lyzr's brownish color palette, incorporating key headline stats and category icons.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "image_description": "string",
+    "design_notes": "string",
+    "alt_text": "string"
+  },
+  "example_response": {
+    "image_description": "sample string",
+    "design_notes": "sample string",
+    "alt_text": "sample string"
+  },
+  "has_module_outputs": true,
+  "module_outputs_example": {
+    "artifact_files": [
+      {
+        "file_url": "https://example.com/image.png"
+      }
+    ]
+  }
+}

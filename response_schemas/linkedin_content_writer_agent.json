@@ -1,0 +1,33 @@
+{
+  "agent_id": "699566df5cfd76433be5d3fa",
+  "agent_name": "LinkedIn Content Writer Agent",
+  "agent_type": "json",
+  "accessor": "json",
+  "has_module_outputs": false,
+  "response_schema": {
+    "linkedin_post": "string",
+    "character_count": "number",
+    "hook_line": "string",
+    "big_picture_analysis": "string",
+    "suggested_tags": {
+      "type": "array",
+      "items": {
+        "name": "string",
+        "title": "string",
+        "reason": "string"
+      }
+    },
+    "hashtags": {
+      "type": "array",
+      "items": "string"
+    },
+    "category_highlights": {
+      "yc_startups": "string",
+      "new_models": "string",
+      "open_source": "string",
+      "benchmarks": "string",
+      "layoffs_hiring": "string",
+      "funding": "string"
+    }
+  }
+}

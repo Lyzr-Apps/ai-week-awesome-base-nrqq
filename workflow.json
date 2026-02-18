@@ -1,0 +1,19 @@
+{
+  "nodes": [
+    {"id": "input_node", "type": "Input", "label": "User Query / Scheduled Trigger", "nodeCategory": "input"},
+    {"id": "manager_agent", "type": "Agent", "label": "AI Digest Coordinator", "nodeCategory": "agent"},
+    {"id": "research_agent", "type": "Agent", "label": "AI Trend Research Agent", "nodeCategory": "agent"},
+    {"id": "writer_agent", "type": "Agent", "label": "LinkedIn Content Writer Agent", "nodeCategory": "agent"},
+    {"id": "image_agent", "type": "Agent", "label": "Branded Image Generator Agent", "nodeCategory": "agent"},
+    {"id": "slack_agent", "type": "Agent", "label": "Slack Delivery Agent", "nodeCategory": "agent"},
+    {"id": "output_node", "type": "Output", "label": "Weekly Digest Output", "nodeCategory": "end"}
+  ],
+  "edges": [
+    {"source": "input_node", "target": "manager_agent"},
+    {"source": "manager_agent", "target": "research_agent"},
+    {"source": "manager_agent", "target": "writer_agent"},
+    {"source": "manager_agent", "target": "image_agent"},
+    {"source": "image_agent", "target": "slack_agent"},
+    {"source": "slack_agent", "target": "output_node"}
+  ]
+}

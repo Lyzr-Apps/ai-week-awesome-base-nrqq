@@ -1,0 +1,12 @@
+{
+  "agent_id": "6995671b52ed9064d46e1e08",
+  "agent_name": "Branded Image Generator Agent",
+  "agent_type": "json",
+  "accessor": "json",
+  "has_module_outputs": true,
+  "response_schema": {
+    "image_description": "string",
+    "design_notes": "string",
+    "alt_text": "string"
+  }
+}
